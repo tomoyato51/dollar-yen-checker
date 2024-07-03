@@ -1,4 +1,4 @@
-name: Dollar-Yen Rate Check
+name: Dollar-Yen Rate Checker
 
 on:
   schedule:
