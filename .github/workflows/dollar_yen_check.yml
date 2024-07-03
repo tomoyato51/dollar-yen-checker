@@ -2,18 +2,18 @@ name: Dollar-Yen Rate Check
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # 5分ごとに実行
-  workflow_dispatch:  # 手動実行のトリガーを追加
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   check_rate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4  # v3からv4に更新
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up Python
-      uses: actions/setup-python@v5  # v4からv5に更新
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
     - name: Install dependencies
