@@ -38,36 +38,49 @@ def send_line_notification(message):
         logging.error(f"LINE通知送信エラー: {e}")
         return False
 
+def save_last_notification_time(time):
+    data = {'last_notification': time.isoformat()}
+    try:
+        with open('last_notification.json', 'w') as f:
+            json.dump(data, f)
+        logging.info(f"最終通知時刻を保存しました: {time.isoformat()}")
+    except IOError as e:
+        logging.error(f"最終通知時刻の保存中にエラーが発生しました: {e}")
+
 def load_last_notification_time():
+    if not os.path.exists('last_notification.json'):
+        logging.info("last_notification.jsonが存在しません。デフォルトの時刻で作成します。")
+        save_last_notification_time(datetime.min)
+        return datetime.min
     try:
         with open('last_notification.json', 'r') as f:
             data = json.load(f)
             return datetime.fromisoformat(data['last_notification'])
-    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+        logging.error(f"最終通知時刻の読み込み中にエラーが発生しました: {e}")
         return datetime.min
 
-def save_last_notification_time(time):
-    with open('last_notification.json', 'w') as f:
-        json.dump({'last_notification': time.isoformat()}, f)
-
 def main():
-    target_rate = float(os.environ.get('TARGET_RATE', 110.0))
-    notification_interval = timedelta(minutes=int(os.environ.get('NOTIFICATION_INTERVAL', 60)))
-    
-    current_rate = get_exchange_rate()
-    
-    if current_rate is not None:
-        logging.info(f"現在のドル円レート: {current_rate:.2f}")
+    try:
+        target_rate = float(os.environ.get('TARGET_RATE', 110.0))
+        notification_interval = timedelta(minutes=int(os.environ.get('NOTIFICATION_INTERVAL', 60)))
         
-        last_notification = load_last_notification_time()
-        now = datetime.now()
+        current_rate = get_exchange_rate()
         
-        if current_rate >= target_rate and now - last_notification >= notification_interval:
-            message = f"\nドル円レートが{target_rate}円に達しました。\n現在のレート: {current_rate:.2f}円"
-            if send_line_notification(message):
-                save_last_notification_time(now)
-    else:
-        logging.warning("レートの取得に失敗しました。")
+        if current_rate is not None:
+            logging.info(f"現在のドル円レート: {current_rate:.2f}")
+            
+            last_notification = load_last_notification_time()
+            now = datetime.now()
+            
+            if current_rate >= target_rate and now - last_notification >= notification_interval:
+                message = f"\nドル円レートが{target_rate}円に達しました。\n現在のレート: {current_rate:.2f}円"
+                if send_line_notification(message):
+                    save_last_notification_time(now)
+        else:
+            logging.warning("レートの取得に失敗しました。")
+    except Exception as e:
+        logging.error(f"予期せぬエラーが発生しました: {e}")
 
 if __name__ == "__main__":
     main()
