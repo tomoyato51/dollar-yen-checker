@@ -1,17 +1,19 @@
-name: Dollar-Yen Rate Checker
+name: Dollar-Yen Rate Check
 
 on:
   schedule:
     - cron: '*/5 * * * *'  # 5分ごとに実行
-  workflow_dispatch:  # 手動実行用のトリガーを追加
+  workflow_dispatch:  # 手動実行のトリガーを追加
 
 jobs:
   check_rate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4  # v3からv4に更新
+      with:
+        fetch-depth: 0
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5  # v4からv5に更新
       with:
         python-version: '3.x'
     - name: Install dependencies
@@ -26,11 +28,7 @@ jobs:
       run: python finance_dollyen.py
     - name: Commit and push if changed
       run: |
-        git config --global user.email "github-actions@example.com"
-        git config --global user.name "GitHub Actions"
-        if [ -f last_notification.json ]; then
-          git add last_notification.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update last notification time" && git push)
-        else
-          echo "last_notification.json does not exist, skipping commit"
-        fi
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        git add -A
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Update last notification time" && git push)
